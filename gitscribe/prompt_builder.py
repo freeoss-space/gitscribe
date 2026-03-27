@@ -13,6 +13,13 @@ FORMAT_DESCRIPTIONS: dict[CommitFormat, str] = {
     CommitFormat.NONE: "No specific format",
 }
 
+_PLAIN_TEXT_INSTRUCTION = (
+    "Respond only with plain text."
+    " Do not format with markdown."
+    " Do not format as JSON."
+    " Do not format as code blocks."
+)
+
 
 class PromptBuilder:
     """Builds prompts for AI backends."""
@@ -33,6 +40,7 @@ class PromptBuilder:
             f"Style: {style.value}.",
             f"Format: {format_desc}.",
             f"Max body lines: {body_desc}.",
+            f"{_PLAIN_TEXT_INSTRUCTION} Reply with nothing but the commit message.",
         ]
 
         if feedback:
@@ -52,6 +60,7 @@ class PromptBuilder:
         parts = [
             "Use the following git diff to create a pull request message.",
             f"Style: {style.value}.",
+            f"{_PLAIN_TEXT_INSTRUCTION} Reply with nothing but the PR message.",
         ]
 
         if template:

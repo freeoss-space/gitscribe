@@ -1,5 +1,6 @@
 """CLI entry point for gitscribe."""
 
+from dataclasses import dataclass
 from typing import Annotated
 
 import typer
@@ -21,13 +22,20 @@ app = typer.Typer(
 )
 
 
-def _load_deps() -> tuple[ConfigManager, "UI", "GitOperations"]:
+@dataclass
+class Dependencies:
+    config_manager: ConfigManager
+    ui: UI
+    git_ops: GitOperations
+
+
+def _load_deps() -> Dependencies:
     config_mgr = ConfigManager()
     config = config_mgr.load()
     console = create_console(config.theme)
     ui = UI(console)
     git_ops = GitOperations()
-    return config_mgr, ui, git_ops
+    return Dependencies(config_manager=config_mgr, ui=ui, git_ops=git_ops)
 
 
 @app.command(name="commit", help="Generate a commit message from staged changes.")
@@ -46,8 +54,8 @@ def commit_cmd(
         typer.Option("--body", "-b", help="Body length: title-only, short, long"),
     ] = None,
 ) -> None:
-    config_mgr, ui, git_ops = _load_deps()
-    config = config_mgr.load()
+    deps = _load_deps()
+    config = deps.config_manager.load()
 
     resolved_style = Style(style) if style else config.commit.style
     resolved_fmt = CommitFormat(fmt) if fmt else config.commit.format
@@ -58,8 +66,8 @@ def commit_cmd(
 
     cmd = CommitCommand(
         ai_backend=backend,
-        git_ops=git_ops,
-        ui=ui,
+        git_ops=deps.git_ops,
+        ui=deps.ui,
         console=console,
         gh_config=config.gh,
     )
@@ -77,8 +85,8 @@ def pr_cmd(
         typer.Option("--base", help="Base branch to diff against (default: auto-detect)"),
     ] = None,
 ) -> None:
-    config_mgr, ui, git_ops = _load_deps()
-    config = config_mgr.load()
+    deps = _load_deps()
+    config = deps.config_manager.load()
 
     resolved_style = Style(style) if style else config.pr.style
 
@@ -87,8 +95,8 @@ def pr_cmd(
 
     cmd = PrCommand(
         ai_backend=backend,
-        git_ops=git_ops,
-        ui=ui,
+        git_ops=deps.git_ops,
+        ui=deps.ui,
         console=console,
         gh_config=config.gh,
     )

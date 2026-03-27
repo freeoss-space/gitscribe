@@ -51,6 +51,19 @@ class TestCommitPrompt:
         assert "Make it shorter" in prompt
         assert "feedback" in prompt.lower()
 
+    def test_commit_prompt_has_plain_text_instruction(self) -> None:
+        prompt = PromptBuilder.commit(
+            diff="some diff",
+            style=Style.PROFESSIONAL,
+            fmt=CommitFormat.CONVENTIONAL,
+            body_length=BodyLength.SHORT,
+        )
+        assert "Respond only with plain text" in prompt
+        assert "Do not format with markdown" in prompt
+        assert "Do not format as JSON" in prompt
+        assert "Do not format as code blocks" in prompt
+        assert "Reply with nothing but the commit message" in prompt
+
 
 class TestPrPrompt:
     def test_basic_pr_prompt(self) -> None:
@@ -86,3 +99,14 @@ class TestPrPrompt:
             feedback="Add more detail about the API changes",
         )
         assert "Add more detail about the API changes" in prompt
+
+    def test_pr_prompt_has_plain_text_instruction(self) -> None:
+        prompt = PromptBuilder.pr(
+            diff="diff content",
+            style=Style.PROFESSIONAL,
+        )
+        assert "Respond only with plain text" in prompt
+        assert "Do not format with markdown" in prompt
+        assert "Do not format as JSON" in prompt
+        assert "Do not format as code blocks" in prompt
+        assert "Reply with nothing but the PR message" in prompt

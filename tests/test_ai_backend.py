@@ -3,7 +3,7 @@
 import subprocess
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import httpx
+import aiohttp
 import pytest
 
 from gitscribe.ai_backend import ApiBackend, CliBackend, create_backend
@@ -16,20 +16,25 @@ class TestApiBackend:
         config = ApiConfig(url="http://localhost:8080/v1", token="sk-test", model="gpt-4")
         backend = ApiBackend(config)
 
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "choices": [{"message": {"content": "feat: add feature"}}]
-        }
+        mock_response = AsyncMock()
+        mock_response.status = 200
         mock_response.raise_for_status = MagicMock()
+        mock_response.json = AsyncMock(
+            return_value={"choices": [{"message": {"content": "feat: add feature"}}]}
+        )
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=False)
 
-        with patch.object(
-            httpx.AsyncClient, "post", new_callable=AsyncMock, return_value=mock_response
-        ) as mock_post:
+        mock_session = AsyncMock()
+        mock_session.post = MagicMock(return_value=mock_response)
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("aiohttp.ClientSession", return_value=mock_session):
             result = await backend.generate("Generate a commit message")
             assert result == "feat: add feature"
-            mock_post.assert_called_once()
-            call_kwargs = mock_post.call_args
+            mock_session.post.assert_called_once()
+            call_kwargs = mock_session.post.call_args
             assert call_kwargs[1]["json"]["model"] == "gpt-4"
             assert call_kwargs[1]["json"]["messages"][0]["content"] == "Generate a commit message"
 
@@ -38,16 +43,26 @@ class TestApiBackend:
         config = ApiConfig(url="http://localhost:8080/v1", token="sk-test", model="gpt-4")
         backend = ApiBackend(config)
 
+        mock_response = AsyncMock()
+        mock_response.raise_for_status = MagicMock(
+            side_effect=aiohttp.ClientResponseError(
+                request_info=MagicMock(),
+                history=(),
+                status=500,
+                message="Server Error",
+            )
+        )
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+        mock_response.__aexit__ = AsyncMock(return_value=False)
+
+        mock_session = AsyncMock()
+        mock_session.post = MagicMock(return_value=mock_response)
+        mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session.__aexit__ = AsyncMock(return_value=False)
+
         with (
-            patch.object(
-                httpx.AsyncClient,
-                "post",
-                new_callable=AsyncMock,
-                side_effect=httpx.HTTPStatusError(
-                    "error", request=MagicMock(), response=MagicMock()
-                ),
-            ),
-            pytest.raises(httpx.HTTPStatusError),
+            patch("aiohttp.ClientSession", return_value=mock_session),
+            pytest.raises(aiohttp.ClientResponseError),
         ):
             await backend.generate("test")
 

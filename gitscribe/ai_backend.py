@@ -3,7 +3,7 @@
 import subprocess
 from abc import ABC, abstractmethod
 
-import httpx
+import aiohttp
 
 from gitscribe.models import AiConfig, ApiConfig, CliConfig
 
@@ -22,8 +22,10 @@ class ApiBackend(AiBackend):
         self._config = config
 
     async def generate(self, prompt: str) -> str:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
+        timeout = aiohttp.ClientTimeout(total=60.0)
+        async with (
+            aiohttp.ClientSession(timeout=timeout) as session,
+            session.post(
                 f"{self._config.url}/chat/completions",
                 headers={
                     "Authorization": f"Bearer {self._config.token}",
@@ -34,10 +36,10 @@ class ApiBackend(AiBackend):
                     "messages": [{"role": "user", "content": prompt}],
                     "temperature": 0.7,
                 },
-                timeout=60.0,
-            )
+            ) as response,
+        ):
             response.raise_for_status()
-            data: dict = response.json()
+            data: dict = await response.json()
             return str(data["choices"][0]["message"]["content"]).strip()
 
 

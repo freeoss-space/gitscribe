@@ -1,5 +1,6 @@
 """Tests for UI module."""
 
+from dataclasses import dataclass
 from io import StringIO
 
 from rich.console import Console
@@ -10,42 +11,48 @@ from gitscribe.theme import create_console
 from gitscribe.ui import COMMIT_KEY_MAP, PR_KEY_MAP, UI
 
 
+@dataclass
+class UIFixture:
+    ui: UI
+    console: Console
+
+
 class TestUI:
-    def _make_ui(self) -> tuple[UI, Console]:
+    def _make_ui(self) -> UIFixture:
         console = create_console(ThemeConfig())
         console.file = StringIO()
         ui = UI(console)
-        return ui, console
+        return UIFixture(ui=ui, console=console)
 
     def test_show_banner(self) -> None:
-        ui, console = self._make_ui()
-        ui.show_banner()
-        output = console.file.getvalue()  # type: ignore[union-attr]
+        fixture = self._make_ui()
+        fixture.ui.show_banner()
+        output = fixture.console.file.getvalue()  # type: ignore[union-attr]
         assert "GitScribe" in output
 
     def test_show_message(self) -> None:
-        ui, console = self._make_ui()
-        ui.show_message("feat: add stuff", title="Commit Message")
-        output = console.file.getvalue()  # type: ignore[union-attr]
+        fixture = self._make_ui()
+        fixture.ui.show_message("feat: add stuff", title="Commit Message")
+        output = fixture.console.file.getvalue()  # type: ignore[union-attr]
         assert "Commit Message" in output
 
     def test_show_error(self) -> None:
-        ui, console = self._make_ui()
-        ui.show_error("something went wrong")
-        output = console.file.getvalue()  # type: ignore[union-attr]
+        fixture = self._make_ui()
+        fixture.ui.show_error("something went wrong")
+        output = fixture.console.file.getvalue()  # type: ignore[union-attr]
         assert "something went wrong" in output
 
     def test_show_success(self) -> None:
-        ui, console = self._make_ui()
-        ui.show_success("done!")
-        output = console.file.getvalue()  # type: ignore[union-attr]
+        fixture = self._make_ui()
+        fixture.ui.show_success("done!")
+        output = fixture.console.file.getvalue()  # type: ignore[union-attr]
         assert "done!" in output
 
     def test_show_diff_stats(self) -> None:
-        ui, console = self._make_ui()
+        fixture = self._make_ui()
         diff = "--- a/file.py\n+++ b/file.py\n+new line\n-old line"
-        ui.show_diff_stats(diff)
-        output = console.file.getvalue()  # type: ignore[union-attr]
+        fixture.ui.show_diff_stats(diff)
+        output = fixture.console.file.getvalue()  # type: ignore[union-attr]
         assert "+1" in output
         assert "-1" in output
 

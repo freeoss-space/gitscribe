@@ -1,5 +1,7 @@
 """CLI entry point for gitscribe."""
 
+import os
+import subprocess
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -101,6 +103,56 @@ def pr_cmd(
         gh_config=config.gh,
     )
     cmd.run(style=resolved_style, base_branch=base)
+
+
+@app.command(name="help", help="Show usage information.")
+def help_cmd() -> None:
+    """Display a help message with available commands and usage examples."""
+    typer.echo(
+        "gitscribe - AI-powered git commit and PR message generator.\n"
+        "\n"
+        "Usage: gitscribe <command> [options]\n"
+        "\n"
+        "Commands:\n"
+        "  commit, c   Generate a commit message from staged changes\n"
+        "  pr          Generate a PR message from branch diff\n"
+        "  config      Open the configuration file in your editor\n"
+        "  help        Show this help message\n"
+        "\n"
+        "Commit options:\n"
+        "  -s, --style   Message style: professional, fun, casual\n"
+        "  -f, --format  Message format: conventional, gitmoji, none\n"
+        "  -b, --body    Body length: title-only, short, long\n"
+        "\n"
+        "PR options:\n"
+        "  -s, --style   Message style: professional, fun, casual\n"
+        "  --base        Base branch to diff against (default: auto-detect)\n"
+        "\n"
+        "Examples:\n"
+        "  gitscribe commit\n"
+        "  gitscribe commit -s fun -f gitmoji -b long\n"
+        "  gitscribe pr --base main\n"
+        "  gitscribe config\n"
+    )
+
+
+@app.command(name="config", help="Open the configuration file in your editor.")
+def config_cmd() -> None:
+    """Create the config file with defaults if missing, then open it in $EDITOR."""
+    config_mgr = ConfigManager()
+
+    if not config_mgr.config_path.exists():
+        config_mgr.save(config_mgr.load())
+        typer.echo(f"Created default config at {config_mgr.config_path}")
+
+    editor = os.environ.get("EDITOR", "vi")
+    try:
+        subprocess.run([editor, str(config_mgr.config_path)], check=True)  # noqa: S603
+    except FileNotFoundError:
+        typer.echo(f"Editor '{editor}' not found. Set $EDITOR to your preferred editor.", err=True)
+        raise typer.Exit(code=1) from None
+    except subprocess.CalledProcessError as exc:
+        raise typer.Exit(code=exc.returncode) from None
 
 
 if __name__ == "__main__":

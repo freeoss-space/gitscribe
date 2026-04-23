@@ -188,6 +188,24 @@ class TestCli:
         mock_subprocess_run.assert_called_once()
 
     @patch("gitscribe.cli.ConfigManager")
+    @patch("gitscribe.cli.subprocess.run")
+    def test_config_uses_tuios_when_available(
+        self,
+        mock_subprocess_run: MagicMock,
+        mock_config_mgr_cls: MagicMock,
+    ) -> None:
+        with patch("shutil.which", return_value="/usr/bin/tuios"):
+            mock_config_mgr = MagicMock()
+            mock_config_mgr.config_path.exists.return_value = True
+            mock_config_mgr_cls.return_value = mock_config_mgr
+
+            result = runner.invoke(app, ["config"], env={"EDITOR": "nano"})
+            assert result.exit_code == 0
+            cmd = mock_subprocess_run.call_args[0][0]
+            assert isinstance(cmd, list)
+            assert cmd[0] == "tuios"
+
+    @patch("gitscribe.cli.ConfigManager")
     @patch("gitscribe.cli.subprocess.run", side_effect=FileNotFoundError)
     def test_config_editor_not_found(
         self,

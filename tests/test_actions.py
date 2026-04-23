@@ -50,6 +50,34 @@ class TestActionHandler:
                 result = handler.do_edit("original message")
                 assert result == "edited message"
 
+    def test_do_create_pr_uses_tuios_when_available(self) -> None:
+        gh_config = GhConfig(command="gh pr create --title {title} --body {body}")
+        handler = ActionHandler(git_ops=MagicMock(), gh_config=gh_config)
+        with (
+            patch("shutil.which", return_value="/usr/bin/tuios"),
+            patch("subprocess.run") as mock_run,
+        ):
+            mock_run.return_value = MagicMock(returncode=0)
+            handler.do_create_pr("My Title\n\nBody text")
+            cmd = mock_run.call_args[0][0]
+            assert isinstance(cmd, list)
+            assert cmd[0] == "tuios"
+            assert "sh" in cmd
+            assert "-c" in cmd
+
+    def test_do_create_pr_falls_back_to_shell_without_tuios(self) -> None:
+        gh_config = GhConfig(command="gh pr create --title {title} --body {body}")
+        handler = ActionHandler(git_ops=MagicMock(), gh_config=gh_config)
+        with (
+            patch("shutil.which", return_value=None),
+            patch("subprocess.run") as mock_run,
+        ):
+            mock_run.return_value = MagicMock(returncode=0)
+            handler.do_create_pr("My Title\n\nBody text")
+            cmd = mock_run.call_args[0][0]
+            assert isinstance(cmd, str)
+            assert "gh pr create" in cmd
+
     def test_do_create_pr_default_command(self) -> None:
         gh_config = GhConfig(command="gh pr create --title {title} --body {body}")
         handler = ActionHandler(git_ops=MagicMock(), gh_config=gh_config)

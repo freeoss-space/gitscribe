@@ -64,4 +64,10 @@ class ActionHandler:
             "{body}", shlex.quote(body)
         )
 
-        subprocess.run(cmd, shell=True, check=True)
+        if shutil.which("tuios"):
+            subprocess.run(
+                ["tuios", "new", f"gitscribe-{os.getpid()}", "--", "sh", "-c", cmd],
+                check=True,
+            )
+        else:
+            subprocess.run(cmd, shell=True, check=True)

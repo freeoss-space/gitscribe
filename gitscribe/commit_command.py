@@ -34,8 +34,10 @@ class CommitCommand:
         style: Style,
         fmt: CommitFormat,
         body_length: BodyLength,
+        output_only: bool = False,
     ) -> None:
-        self._ui.show_banner()
+        if not output_only:
+            self._ui.show_banner()
 
         if not self._git.has_staged_changes():
             self._ui.show_warning("No staged changes found. Stage files with `git add` first.")
@@ -46,17 +48,24 @@ class CommitCommand:
             self._ui.show_warning("Empty diff. Nothing to generate.")
             return
 
-        self._ui.show_diff_stats(diff)
+        if not output_only:
+            self._ui.show_diff_stats(diff)
 
         prompt = PromptBuilder.commit(diff=diff, style=style, fmt=fmt, body_length=body_length)
-        message = self._generate(prompt)
+        message = self._generate(prompt, silent=output_only)
+
+        if output_only:
+            print(message)
+            return
 
         self._interaction_loop(message, diff, style, fmt, body_length)
 
-    def _generate(self, prompt: str) -> str:
-        self._ui.show_generating()
-        with self._console.status("[secondary]Thinking...[/secondary]"):
-            return asyncio.run(self._ai.generate(prompt))
+    def _generate(self, prompt: str, silent: bool = False) -> str:
+        if not silent:
+            self._ui.show_generating()
+            with self._console.status("[secondary]Thinking...[/secondary]"):
+                return asyncio.run(self._ai.generate(prompt))
+        return asyncio.run(self._ai.generate(prompt))
 
     def _interaction_loop(
         self,

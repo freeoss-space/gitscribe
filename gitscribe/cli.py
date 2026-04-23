@@ -55,6 +55,10 @@ def commit_cmd(
         str | None,
         typer.Option("--body", "-b", help="Body length: title-only, short, long"),
     ] = None,
+    output_only: Annotated[
+        bool,
+        typer.Option("--output-only", help="Print the generated message and exit without prompting"),
+    ] = False,
 ) -> None:
     deps = _load_deps()
     config = deps.config_manager.load()
@@ -73,7 +77,7 @@ def commit_cmd(
         console=console,
         gh_config=config.gh,
     )
-    cmd.run(style=resolved_style, fmt=resolved_fmt, body_length=resolved_body)
+    cmd.run(style=resolved_style, fmt=resolved_fmt, body_length=resolved_body, output_only=output_only)
 
 
 @app.command(name="pr", help="Generate a PR message from branch diff.")
@@ -86,6 +90,10 @@ def pr_cmd(
         str | None,
         typer.Option("--base", help="Base branch to diff against (default: auto-detect)"),
     ] = None,
+    output_only: Annotated[
+        bool,
+        typer.Option("--output-only", help="Print the generated message and exit without prompting"),
+    ] = False,
 ) -> None:
     deps = _load_deps()
     config = deps.config_manager.load()
@@ -102,7 +110,7 @@ def pr_cmd(
         console=console,
         gh_config=config.gh,
     )
-    cmd.run(style=resolved_style, base_branch=base)
+    cmd.run(style=resolved_style, base_branch=base, output_only=output_only)
 
 
 @app.command(name="help", help="Show usage information.")
@@ -120,18 +128,22 @@ def help_cmd() -> None:
         "  help        Show this help message\n"
         "\n"
         "Commit options:\n"
-        "  -s, --style   Message style: professional, fun, casual\n"
-        "  -f, --format  Message format: conventional, gitmoji, none\n"
-        "  -b, --body    Body length: title-only, short, long\n"
+        "  -s, --style      Message style: professional, fun, casual\n"
+        "  -f, --format     Message format: conventional, gitmoji, none\n"
+        "  -b, --body       Body length: title-only, short, long\n"
+        "  --output-only    Print generated message and exit without prompting\n"
         "\n"
         "PR options:\n"
-        "  -s, --style   Message style: professional, fun, casual\n"
-        "  --base        Base branch to diff against (default: auto-detect)\n"
+        "  -s, --style      Message style: professional, fun, casual\n"
+        "  --base           Base branch to diff against (default: auto-detect)\n"
+        "  --output-only    Print generated message and exit without prompting\n"
         "\n"
         "Examples:\n"
         "  gitscribe commit\n"
         "  gitscribe commit -s fun -f gitmoji -b long\n"
+        "  gitscribe commit --output-only\n"
         "  gitscribe pr --base main\n"
+        "  gitscribe pr --output-only\n"
         "  gitscribe config\n"
     )
 

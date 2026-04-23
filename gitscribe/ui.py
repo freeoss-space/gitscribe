@@ -109,5 +109,5 @@ class UI:
         deletions = sum(1 for line in lines if line.startswith("-") and not line.startswith("---"))
         self._console.print(
             f"[accent]+{additions}[/accent] [error]-{deletions}[/error] "
-            f"[muted]({len(lines)} lines)[/muted]"
+            f"[muted]({additions + deletions} lines changed)[/muted]"
         )

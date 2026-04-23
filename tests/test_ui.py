@@ -56,6 +56,24 @@ class TestUI:
         assert "+1" in output
         assert "-1" in output
 
+    def test_show_diff_stats_counts_changed_lines_not_total_diff_lines(self) -> None:
+        fixture = self._make_ui()
+        # diff has 4 lines total but only 2 are changed (1 addition + 1 deletion)
+        diff = "--- a/file.py\n+++ b/file.py\n+new line\n-old line"
+        fixture.ui.show_diff_stats(diff)
+        output = fixture.console.file.getvalue()  # type: ignore[union-attr]
+        assert "(2 lines changed)" in output
+
+    def test_show_diff_stats_excludes_context_lines_from_count(self) -> None:
+        fixture = self._make_ui()
+        # diff with context lines (space-prefixed) should not count them
+        diff = "--- a/file.py\n+++ b/file.py\n context\n+added\n-removed\n context2"
+        fixture.ui.show_diff_stats(diff)
+        output = fixture.console.file.getvalue()  # type: ignore[union-attr]
+        assert "+1" in output
+        assert "-1" in output
+        assert "(2 lines changed)" in output
+
 
 class TestKeyMaps:
     def test_commit_key_map_complete(self) -> None:

@@ -1,7 +1,6 @@
 """CLI entry point for gitscribe."""
 
 import os
-import shutil
 import subprocess
 from dataclasses import dataclass
 from typing import Annotated
@@ -148,13 +147,7 @@ def config_cmd() -> None:
 
     editor = os.environ.get("EDITOR", "vi")
     try:
-        if shutil.which("tuios"):
-            subprocess.run(
-                ["tuios", "new", f"gitscribe-{os.getpid()}", "--", editor, str(config_mgr.config_path)],
-                check=True,
-            )
-        else:
-            subprocess.run([editor, str(config_mgr.config_path)], check=True)  # noqa: S603
+        subprocess.run([editor, str(config_mgr.config_path)], check=True)  # noqa: S603
     except FileNotFoundError:
         typer.echo(f"Editor '{editor}' not found. Set $EDITOR to your preferred editor.", err=True)
         raise typer.Exit(code=1) from None

@@ -2,7 +2,6 @@
 
 import os
 import shlex
-import shutil
 import subprocess
 import tempfile
 from enum import Enum
@@ -44,13 +43,7 @@ class ActionHandler:
             tmp_path = tmp.name
 
         try:
-            if shutil.which("tuios"):
-                subprocess.run(
-                    ["tuios", "new", f"gitscribe-{os.getpid()}", "--", editor, tmp_path],
-                    check=True,
-                )
-            else:
-                subprocess.run([editor, tmp_path], check=True)
+            subprocess.run([editor, tmp_path], check=True)
             return Path(tmp_path).read_text()
         finally:
             Path(tmp_path).unlink(missing_ok=True)
@@ -64,10 +57,4 @@ class ActionHandler:
             "{body}", shlex.quote(body)
         )
 
-        if shutil.which("tuios"):
-            subprocess.run(
-                ["tuios", "new", f"gitscribe-{os.getpid()}", "--", "sh", "-c", cmd],
-                check=True,
-            )
-        else:
-            subprocess.run(cmd, shell=True, check=True)
+        subprocess.run(cmd, shell=True, check=True)

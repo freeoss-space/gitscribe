@@ -205,6 +205,88 @@ class TestCli:
             assert isinstance(cmd, list)
             assert cmd[0] == "tuios"
 
+    @patch("gitscribe.cli.CommitCommand")
+    @patch("gitscribe.cli.create_backend")
+    @patch("gitscribe.cli.subprocess.run")
+    @patch("gitscribe.cli.ConfigManager")
+    def test_commit_launches_in_tuios_when_available(
+        self,
+        mock_config_mgr_cls: MagicMock,
+        mock_subprocess_run: MagicMock,
+        mock_create_backend: MagicMock,
+        mock_cmd_cls: MagicMock,
+    ) -> None:
+        mock_config_mgr = MagicMock()
+        mock_config_mgr.load.return_value = _TEST_CONFIG
+        mock_config_mgr_cls.return_value = mock_config_mgr
+
+        with patch("gitscribe.cli.shutil.which", return_value="/usr/bin/tuios"):
+            result = runner.invoke(app, ["commit"], env={"GITSCRIBE_IN_TUIOS": ""})
+        assert result.exit_code == 0
+        cmd = mock_subprocess_run.call_args[0][0]
+        assert isinstance(cmd, list)
+        assert cmd[0] == "tuios"
+        mock_cmd_cls.return_value.run.assert_not_called()
+
+    @patch("gitscribe.cli.CommitCommand")
+    @patch("gitscribe.cli.create_backend")
+    @patch("gitscribe.cli.ConfigManager")
+    def test_commit_skips_tuios_when_already_in_session(
+        self,
+        mock_config_mgr_cls: MagicMock,
+        mock_create_backend: MagicMock,
+        mock_cmd_cls: MagicMock,
+    ) -> None:
+        mock_config_mgr = MagicMock()
+        mock_config_mgr.load.return_value = _TEST_CONFIG
+        mock_config_mgr_cls.return_value = mock_config_mgr
+
+        with patch("gitscribe.cli.shutil.which", return_value="/usr/bin/tuios"):
+            result = runner.invoke(app, ["commit"], env={"GITSCRIBE_IN_TUIOS": "1"})
+        assert result.exit_code == 0
+        mock_cmd_cls.return_value.run.assert_called_once()
+
+    @patch("gitscribe.cli.PrCommand")
+    @patch("gitscribe.cli.create_backend")
+    @patch("gitscribe.cli.subprocess.run")
+    @patch("gitscribe.cli.ConfigManager")
+    def test_pr_launches_in_tuios_when_available(
+        self,
+        mock_config_mgr_cls: MagicMock,
+        mock_subprocess_run: MagicMock,
+        mock_create_backend: MagicMock,
+        mock_cmd_cls: MagicMock,
+    ) -> None:
+        mock_config_mgr = MagicMock()
+        mock_config_mgr.load.return_value = _TEST_CONFIG
+        mock_config_mgr_cls.return_value = mock_config_mgr
+
+        with patch("gitscribe.cli.shutil.which", return_value="/usr/bin/tuios"):
+            result = runner.invoke(app, ["pr"], env={"GITSCRIBE_IN_TUIOS": ""})
+        assert result.exit_code == 0
+        cmd = mock_subprocess_run.call_args[0][0]
+        assert isinstance(cmd, list)
+        assert cmd[0] == "tuios"
+        mock_cmd_cls.return_value.run.assert_not_called()
+
+    @patch("gitscribe.cli.PrCommand")
+    @patch("gitscribe.cli.create_backend")
+    @patch("gitscribe.cli.ConfigManager")
+    def test_pr_skips_tuios_when_already_in_session(
+        self,
+        mock_config_mgr_cls: MagicMock,
+        mock_create_backend: MagicMock,
+        mock_cmd_cls: MagicMock,
+    ) -> None:
+        mock_config_mgr = MagicMock()
+        mock_config_mgr.load.return_value = _TEST_CONFIG
+        mock_config_mgr_cls.return_value = mock_config_mgr
+
+        with patch("gitscribe.cli.shutil.which", return_value="/usr/bin/tuios"):
+            result = runner.invoke(app, ["pr"], env={"GITSCRIBE_IN_TUIOS": "1"})
+        assert result.exit_code == 0
+        mock_cmd_cls.return_value.run.assert_called_once()
+
     @patch("gitscribe.cli.ConfigManager")
     @patch("gitscribe.cli.subprocess.run", side_effect=FileNotFoundError)
     def test_config_editor_not_found(

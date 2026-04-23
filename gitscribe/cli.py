@@ -3,6 +3,7 @@
 import os
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -32,6 +33,23 @@ class Dependencies:
     git_ops: GitOperations
 
 
+def _maybe_launch_in_tuios(session_name: str) -> bool:
+    """Re-launches the current command inside tuios if available and not already in a session.
+
+    Returns True if the command was re-launched (caller should return immediately).
+    """
+    if os.environ.get("GITSCRIBE_IN_TUIOS"):
+        return False
+    if not shutil.which("tuios"):
+        return False
+    subprocess.run(
+        ["tuios", "new", f"gitscribe-{session_name}-{os.getpid()}", "--", *sys.argv],
+        check=True,
+        env={**os.environ, "GITSCRIBE_IN_TUIOS": "1"},
+    )
+    return True
+
+
 def _load_deps() -> Dependencies:
     config_mgr = ConfigManager()
     config = config_mgr.load()
@@ -57,6 +75,9 @@ def commit_cmd(
         typer.Option("--body", "-b", help="Body length: title-only, short, long"),
     ] = None,
 ) -> None:
+    if _maybe_launch_in_tuios("commit"):
+        return
+
     deps = _load_deps()
     config = deps.config_manager.load()
 
@@ -88,6 +109,9 @@ def pr_cmd(
         typer.Option("--base", help="Base branch to diff against (default: auto-detect)"),
     ] = None,
 ) -> None:
+    if _maybe_launch_in_tuios("pr"):
+        return
+
     deps = _load_deps()
     config = deps.config_manager.load()
 

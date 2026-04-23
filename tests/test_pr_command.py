@@ -115,3 +115,16 @@ class TestPrCommand:
         assert fixture.backend.generate.call_count == 2
         second_prompt = fixture.backend.generate.call_args_list[1][0][0]
         assert "add changelog" in second_prompt
+
+    def test_output_only_prints_message_without_prompting(self, capsys: MagicMock) -> None:
+        fixture = _make_command()
+        fixture.cmd.run(style=Style.PROFESSIONAL, output_only=True)
+        fixture.backend.generate.assert_called_once()
+        captured = capsys.readouterr()
+        assert "## PR Title" in captured.out
+
+    @patch.object(UI, "prompt_pr_action")
+    def test_output_only_does_not_enter_interaction_loop(self, mock_prompt: MagicMock) -> None:
+        fixture = _make_command()
+        fixture.cmd.run(style=Style.PROFESSIONAL, output_only=True)
+        mock_prompt.assert_not_called()

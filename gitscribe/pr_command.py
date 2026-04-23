@@ -29,8 +29,9 @@ class PrCommand:
         self._console = console
         self._actions = ActionHandler(git_ops=git_ops, gh_config=gh_config)
 
-    def run(self, style: Style, base_branch: str | None = None) -> None:
-        self._ui.show_banner()
+    def run(self, style: Style, base_branch: str | None = None, output_only: bool = False) -> None:
+        if not output_only:
+            self._ui.show_banner()
 
         if base_branch is None:
             base_branch = self._git.get_default_branch()
@@ -43,18 +44,25 @@ class PrCommand:
             )
             return
 
-        self._ui.show_diff_stats(diff)
+        if not output_only:
+            self._ui.show_diff_stats(diff)
 
         template = self._git.find_pr_template()
         prompt = PromptBuilder.pr(diff=diff, style=style, template=template)
-        message = self._generate(prompt)
+        message = self._generate(prompt, silent=output_only)
+
+        if output_only:
+            print(message)
+            return
 
         self._interaction_loop(message, diff, style, template)
 
-    def _generate(self, prompt: str) -> str:
-        self._ui.show_generating()
-        with self._console.status("[secondary]Thinking...[/secondary]"):
-            return asyncio.run(self._ai.generate(prompt))
+    def _generate(self, prompt: str, silent: bool = False) -> str:
+        if not silent:
+            self._ui.show_generating()
+            with self._console.status("[secondary]Thinking...[/secondary]"):
+                return asyncio.run(self._ai.generate(prompt))
+        return asyncio.run(self._ai.generate(prompt))
 
     def _interaction_loop(
         self,

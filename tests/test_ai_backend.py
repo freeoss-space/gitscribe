@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp
 import pytest
 
-from gitscribe.ai_backend import ApiBackend, CliBackend, create_backend
+from gitscribe.ai_backend import ApiBackend, CliBackend, create_backend, resolve_ai_config
 from gitscribe.models import AiConfig, ApiConfig, CliConfig
 
 
@@ -118,3 +118,47 @@ class TestCreateBackend:
         config = AiConfig(backend="unknown")
         with pytest.raises(ValueError, match="Unknown backend"):
             create_backend(config)
+
+
+class TestResolveAiConfig:
+    def test_no_overrides_returns_same_api_config(self) -> None:
+        ai = AiConfig(backend="api", api=ApiConfig(url="http://x", token="t", model="global"))
+        resolved = resolve_ai_config(ai)
+        assert resolved.api.model == "global"
+        assert resolved.backend == "api"
+
+    def test_model_override_replaces_api_model(self) -> None:
+        ai = AiConfig(backend="api", api=ApiConfig(url="http://x", token="t", model="global"))
+        resolved = resolve_ai_config(ai, model="override-model")
+        assert resolved.api.model == "override-model"
+
+    def test_model_override_replaces_cli_model(self) -> None:
+        ai = AiConfig(backend="cli", cli=CliConfig(command="claude", model="global"))
+        resolved = resolve_ai_config(ai, model="override-model")
+        assert resolved.cli.model == "override-model"
+
+    def test_command_override_replaces_cli_command(self) -> None:
+        ai = AiConfig(backend="cli", cli=CliConfig(command="claude", model="m"))
+        resolved = resolve_ai_config(ai, command="claude --fast")
+        assert resolved.cli.command == "claude --fast"
+
+    def test_empty_model_override_keeps_global(self) -> None:
+        ai = AiConfig(backend="api", api=ApiConfig(model="global"))
+        resolved = resolve_ai_config(ai, model="")
+        assert resolved.api.model == "global"
+
+    def test_empty_command_override_keeps_global(self) -> None:
+        ai = AiConfig(backend="cli", cli=CliConfig(command="claude", model="m"))
+        resolved = resolve_ai_config(ai, command="")
+        assert resolved.cli.command == "claude"
+
+    def test_command_override_ignored_for_api_backend(self) -> None:
+        ai = AiConfig(backend="api", api=ApiConfig(model="global"))
+        resolved = resolve_ai_config(ai, command="ignored")
+        assert resolved.api.model == "global"
+
+    def test_both_overrides_applied(self) -> None:
+        ai = AiConfig(backend="cli", cli=CliConfig(command="claude", model="base"))
+        resolved = resolve_ai_config(ai, model="new-model", command="new-cmd")
+        assert resolved.cli.model == "new-model"
+        assert resolved.cli.command == "new-cmd"

@@ -85,6 +85,42 @@ class TestThemeConfig:
         assert theme.warning == "yellow"
 
 
+class TestCommitDefaults:
+    def test_model_default_is_empty(self) -> None:
+        config = CommitDefaults()
+        assert config.model == ""
+
+    def test_command_default_is_empty(self) -> None:
+        config = CommitDefaults()
+        assert config.command == ""
+
+    def test_custom_model(self) -> None:
+        config = CommitDefaults(model="gpt-4-turbo")
+        assert config.model == "gpt-4-turbo"
+
+    def test_custom_command(self) -> None:
+        config = CommitDefaults(command="claude --fast")
+        assert config.command == "claude --fast"
+
+
+class TestPrDefaults:
+    def test_model_default_is_empty(self) -> None:
+        config = PrDefaults()
+        assert config.model == ""
+
+    def test_command_default_is_empty(self) -> None:
+        config = PrDefaults()
+        assert config.command == ""
+
+    def test_custom_model(self) -> None:
+        config = PrDefaults(model="claude-opus-4-5")
+        assert config.model == "claude-opus-4-5"
+
+    def test_custom_command(self) -> None:
+        config = PrDefaults(command="claude --verbose")
+        assert config.command == "claude --verbose"
+
+
 class TestAppConfig:
     def test_defaults(self) -> None:
         config = AppConfig()

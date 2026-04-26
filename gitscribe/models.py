@@ -63,11 +63,15 @@ class CommitDefaults:
     style: Style = Style.PROFESSIONAL
     format: CommitFormat = CommitFormat.CONVENTIONAL
     body_length: BodyLength = BodyLength.SHORT
+    model: str = ""
+    command: str = ""
 
 
 @dataclass(frozen=True)
 class PrDefaults:
     style: Style = Style.PROFESSIONAL
+    model: str = ""
+    command: str = ""
 
 
 @dataclass(frozen=True)

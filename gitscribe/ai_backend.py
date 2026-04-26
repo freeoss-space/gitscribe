@@ -61,6 +61,26 @@ class CliBackend(AiBackend):
         return result.stdout.strip()
 
 
+def resolve_ai_config(config: AiConfig, model: str = "", command: str = "") -> AiConfig:
+    """Return a copy of config with per-command model/command overrides applied."""
+    if not model and not command:
+        return config
+    if config.backend == "api":
+        api = ApiConfig(
+            url=config.api.url,
+            token=config.api.token,
+            model=model if model else config.api.model,
+        )
+        return AiConfig(backend=config.backend, api=api, cli=config.cli)
+    if config.backend == "cli":
+        cli = CliConfig(
+            command=command if command else config.cli.command,
+            model=model if model else config.cli.model,
+        )
+        return AiConfig(backend=config.backend, api=config.api, cli=cli)
+    return config
+
+
 def create_backend(config: AiConfig) -> AiBackend:
     """Factory function to create the appropriate AI backend."""
     if config.backend == "api":

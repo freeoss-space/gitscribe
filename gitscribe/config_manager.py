@@ -81,9 +81,13 @@ class ConfigManager:
                 style=Style(commit_data.get("style", "professional")),
                 format=CommitFormat(commit_data.get("format", "conventional")),
                 body_length=BodyLength(commit_data.get("body_length", "short")),
+                model=commit_data.get("model", ""),
+                command=commit_data.get("command", ""),
             ),
             pr=PrDefaults(
                 style=Style(pr_data.get("style", "professional")),
+                model=pr_data.get("model", ""),
+                command=pr_data.get("command", ""),
             ),
             gh=GhConfig(
                 command=gh_data.get("command", "gh pr create --title {title} --body {body}"),
@@ -115,9 +119,13 @@ class ConfigManager:
                 "style": config.commit.style.value,
                 "format": config.commit.format.value,
                 "body_length": config.commit.body_length.value,
+                "model": config.commit.model,
+                "command": config.commit.command,
             },
             "pr": {
                 "style": config.pr.style.value,
+                "model": config.pr.model,
+                "command": config.pr.command,
             },
             "gh": {
                 "command": config.gh.command,

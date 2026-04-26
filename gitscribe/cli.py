@@ -7,7 +7,7 @@ from typing import Annotated
 
 import typer
 
-from gitscribe.ai_backend import create_backend
+from gitscribe.ai_backend import create_backend, resolve_ai_config
 from gitscribe.commit_command import CommitCommand
 from gitscribe.config_manager import ConfigManager
 from gitscribe.git_operations import GitOperations
@@ -67,7 +67,8 @@ def commit_cmd(
     resolved_fmt = CommitFormat(fmt) if fmt else config.commit.format
     resolved_body = BodyLength(body_length) if body_length else config.commit.body_length
 
-    backend = create_backend(config.ai)
+    ai_config = resolve_ai_config(config.ai, model=config.commit.model, command=config.commit.command)
+    backend = create_backend(ai_config)
     console = create_console(config.theme)
 
     cmd = CommitCommand(
@@ -100,7 +101,8 @@ def pr_cmd(
 
     resolved_style = Style(style) if style else config.pr.style
 
-    backend = create_backend(config.ai)
+    ai_config = resolve_ai_config(config.ai, model=config.pr.model, command=config.pr.command)
+    backend = create_backend(ai_config)
     console = create_console(config.theme)
 
     cmd = PrCommand(

@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from gitscribe.config_manager import ConfigManager
+from gitscribe.config_manager import ConfigManager, _current_platform, _deep_merge
 from gitscribe.models import (
     AiConfig,
     ApiConfig,
@@ -130,3 +130,194 @@ class TestConfigManager:
         assert config.commit.command == ""
         assert config.pr.model == ""
         assert config.pr.command == ""
+
+
+class TestCurrentPlatform:
+    def test_macos(self) -> None:
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "darwin"
+            assert _current_platform() == "macos"
+
+    def test_linux(self) -> None:
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "linux"
+            assert _current_platform() == "linux"
+
+    def test_windows(self) -> None:
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "win32"
+            assert _current_platform() == "windows"
+
+    def test_windows_64(self) -> None:
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "win64"
+            assert _current_platform() == "windows"
+
+    def test_unknown_defaults_to_linux(self) -> None:
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "freebsd"
+            assert _current_platform() == "linux"
+
+
+class TestDeepMerge:
+    def test_simple_override(self) -> None:
+        result = _deep_merge({"a": 1, "b": 2}, {"b": 99})
+        assert result == {"a": 1, "b": 99}
+
+    def test_nested_override(self) -> None:
+        base = {"ai": {"backend": "api", "cli": {"command": "base-cmd", "model": "base-model"}}}
+        override = {"ai": {"cli": {"command": "new-cmd"}}}
+        result = _deep_merge(base, override)
+        assert result["ai"]["cli"]["command"] == "new-cmd"
+        assert result["ai"]["cli"]["model"] == "base-model"
+        assert result["ai"]["backend"] == "api"
+
+    def test_new_key_added(self) -> None:
+        result = _deep_merge({"a": 1}, {"b": 2})
+        assert result == {"a": 1, "b": 2}
+
+    def test_base_unchanged(self) -> None:
+        base = {"a": {"x": 1}}
+        _deep_merge(base, {"a": {"x": 2}})
+        assert base["a"]["x"] == 1
+
+
+class TestPlatformOverrides:
+    def test_linux_overrides_commit_model(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps({
+            "commit": {"model": "base-model"},
+            "platforms": {
+                "linux": {"commit": {"model": "linux-model"}},
+                "macos": {"commit": {"model": "mac-model"}},
+            },
+        }))
+        manager = ConfigManager(config_dir=tmp_path)
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "linux"
+            config = manager.load()
+        assert config.commit.model == "linux-model"
+
+    def test_macos_overrides_commit_model(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps({
+            "commit": {"model": "base-model"},
+            "platforms": {
+                "linux": {"commit": {"model": "linux-model"}},
+                "macos": {"commit": {"model": "mac-model"}},
+            },
+        }))
+        manager = ConfigManager(config_dir=tmp_path)
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "darwin"
+            config = manager.load()
+        assert config.commit.model == "mac-model"
+
+    def test_platform_overrides_commit_command(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps({
+            "platforms": {
+                "linux": {"commit": {"command": "ollama run {model}"}},
+            },
+        }))
+        manager = ConfigManager(config_dir=tmp_path)
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "linux"
+            config = manager.load()
+        assert config.commit.command == "ollama run {model}"
+
+    def test_platform_overrides_pr_model(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps({
+            "platforms": {
+                "macos": {"pr": {"model": "claude-opus-4-7"}},
+            },
+        }))
+        manager = ConfigManager(config_dir=tmp_path)
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "darwin"
+            config = manager.load()
+        assert config.pr.model == "claude-opus-4-7"
+
+    def test_platform_overrides_pr_command(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps({
+            "platforms": {
+                "linux": {"pr": {"command": "llm -m {model}"}},
+            },
+        }))
+        manager = ConfigManager(config_dir=tmp_path)
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "linux"
+            config = manager.load()
+        assert config.pr.command == "llm -m {model}"
+
+    def test_platform_overrides_ai_cli_command(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps({
+            "ai": {"backend": "cli", "cli": {"command": "default-ai", "model": "default"}},
+            "platforms": {
+                "macos": {"ai": {"cli": {"command": "mac-ai", "model": "mac-model"}}},
+            },
+        }))
+        manager = ConfigManager(config_dir=tmp_path)
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "darwin"
+            config = manager.load()
+        assert config.ai.cli.command == "mac-ai"
+        assert config.ai.cli.model == "mac-model"
+        assert config.ai.backend == "cli"
+
+    def test_platform_overrides_ai_backend(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps({
+            "ai": {"backend": "api"},
+            "platforms": {
+                "linux": {"ai": {"backend": "cli", "cli": {"command": "ollama run {model}"}}},
+            },
+        }))
+        manager = ConfigManager(config_dir=tmp_path)
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "linux"
+            config = manager.load()
+        assert config.ai.backend == "cli"
+        assert config.ai.cli.command == "ollama run {model}"
+
+    def test_partial_platform_override_preserves_base(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps({
+            "commit": {"model": "base-model", "command": "base-cmd"},
+            "platforms": {
+                "linux": {"commit": {"model": "linux-model"}},
+            },
+        }))
+        manager = ConfigManager(config_dir=tmp_path)
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "linux"
+            config = manager.load()
+        assert config.commit.model == "linux-model"
+        assert config.commit.command == "base-cmd"
+
+    def test_no_matching_platform_uses_base(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps({
+            "commit": {"model": "base-model"},
+            "platforms": {
+                "macos": {"commit": {"model": "mac-model"}},
+            },
+        }))
+        manager = ConfigManager(config_dir=tmp_path)
+        with patch("gitscribe.config_manager.sys") as mock_sys:
+            mock_sys.platform = "linux"
+            config = manager.load()
+        assert config.commit.model == "base-model"
+
+    def test_empty_platforms_section_ignored(self, tmp_path: Path) -> None:
+        config_file = tmp_path / "config.json"
+        config_file.write_text(json.dumps({
+            "commit": {"model": "base-model"},
+            "platforms": {},
+        }))
+        manager = ConfigManager(config_dir=tmp_path)
+        config = manager.load()
+        assert config.commit.model == "base-model"

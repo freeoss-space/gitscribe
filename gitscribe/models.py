@@ -77,6 +77,7 @@ class PrDefaults:
 @dataclass(frozen=True)
 class GhConfig:
     command: str = "gh pr create --title {title} --body {body}"
+    use_commit_title: bool = False
 
 
 @dataclass(frozen=True)

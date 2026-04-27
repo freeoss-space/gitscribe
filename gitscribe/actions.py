@@ -53,8 +53,12 @@ class ActionHandler:
         title = lines[0].strip()
         body = "\n".join(lines[1:]).strip() if len(lines) > 1 else ""
 
-        cmd = self._gh_config.command.replace("{title}", shlex.quote(title)).replace(
-            "{body}", shlex.quote(body)
-        )
+        if self._gh_config.use_commit_title:
+            cmd_template = self._gh_config.command.replace("--title {title}", "").replace("{title}", "").strip()
+            cmd = cmd_template.replace("{body}", shlex.quote(body))
+        else:
+            cmd = self._gh_config.command.replace("{title}", shlex.quote(title)).replace(
+                "{body}", shlex.quote(body)
+            )
 
         subprocess.run(cmd, shell=True, check=True)

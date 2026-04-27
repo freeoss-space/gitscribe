@@ -11,7 +11,7 @@ from gitscribe.ai_backend import create_backend, resolve_ai_config
 from gitscribe.commit_command import CommitCommand
 from gitscribe.config_manager import ConfigManager
 from gitscribe.git_operations import GitOperations
-from gitscribe.models import BodyLength, CommitFormat, Style
+from gitscribe.models import BodyLength, CommitFormat, GhConfig, Style
 from gitscribe.pr_command import PrCommand
 from gitscribe.theme import create_console
 from gitscribe.ui import UI
@@ -95,6 +95,10 @@ def pr_cmd(
         bool,
         typer.Option("--output-only", help="Print the generated message and exit without prompting"),
     ] = False,
+    no_title: Annotated[
+        bool,
+        typer.Option("--no-title", help="Omit --title from the gh command, letting GitHub use the commit title"),
+    ] = False,
 ) -> None:
     deps = _load_deps()
     config = deps.config_manager.load()
@@ -105,12 +109,16 @@ def pr_cmd(
     backend = create_backend(ai_config)
     console = create_console(config.theme)
 
+    gh_config = config.gh
+    if no_title:
+        gh_config = GhConfig(command=config.gh.command, use_commit_title=True)
+
     cmd = PrCommand(
         ai_backend=backend,
         git_ops=deps.git_ops,
         ui=deps.ui,
         console=console,
-        gh_config=config.gh,
+        gh_config=gh_config,
     )
     cmd.run(style=resolved_style, base_branch=base, output_only=output_only)
 
@@ -139,6 +147,7 @@ def help_cmd() -> None:
         "  -s, --style      Message style: professional, fun, casual\n"
         "  --base           Base branch to diff against (default: auto-detect)\n"
         "  --output-only    Print generated message and exit without prompting\n"
+        "  --no-title       Omit --title from gh command (uses commit title)\n"
         "\n"
         "Examples:\n"
         "  gitscribe commit\n"

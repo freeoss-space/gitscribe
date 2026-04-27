@@ -117,6 +117,7 @@ class ConfigManager:
             ),
             gh=GhConfig(
                 command=gh_data.get("command", "gh pr create --title {title} --body {body}"),
+                use_commit_title=gh_data.get("use_commit_title", False),
             ),
         )
 
@@ -155,5 +156,6 @@ class ConfigManager:
             },
             "gh": {
                 "command": config.gh.command,
+                "use_commit_title": config.gh.use_commit_title,
             },
         }

@@ -72,3 +72,32 @@ class TestActionHandler:
             cmd = mock_run.call_args[0][0]
             assert "My Title" in cmd
             assert "Body line 1" in cmd
+
+    def test_do_create_pr_use_commit_title_omits_title_flag(self) -> None:
+        gh_config = GhConfig(
+            command="gh pr create --title {title} --body {body}",
+            use_commit_title=True,
+        )
+        handler = ActionHandler(git_ops=MagicMock(), gh_config=gh_config)
+
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            handler.do_create_pr("My Title\n\nBody line 1\nBody line 2")
+            cmd = mock_run.call_args[0][0]
+            assert "--title" not in cmd
+            assert "{title}" not in cmd
+            assert "Body line 1" in cmd
+
+    def test_do_create_pr_use_commit_title_still_passes_body(self) -> None:
+        gh_config = GhConfig(
+            command="gh pr create --title {title} --body {body}",
+            use_commit_title=True,
+        )
+        handler = ActionHandler(git_ops=MagicMock(), gh_config=gh_config)
+
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            handler.do_create_pr("Commit Title\n\nDetailed description here.")
+            cmd = mock_run.call_args[0][0]
+            assert "Detailed description here." in cmd
+            assert "Commit Title" not in cmd

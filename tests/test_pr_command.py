@@ -40,7 +40,6 @@ def _make_command(
         ai_backend=backend,
         git_ops=git_ops,
         ui=ui,
-        console=console,
         gh_config=GhConfig(),
     )
     return PrCommandFixture(cmd=cmd, backend=backend, git_ops=git_ops)

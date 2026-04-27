@@ -38,7 +38,6 @@ def _make_command(
         ai_backend=backend,
         git_ops=git_ops,
         ui=ui,
-        console=console,
         gh_config=GhConfig(),
     )
     return CommitCommandFixture(cmd=cmd, backend=backend, git_ops=git_ops)

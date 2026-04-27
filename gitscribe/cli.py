@@ -57,7 +57,7 @@ def commit_cmd(
     ] = None,
     output_only: Annotated[
         bool,
-        typer.Option("--output-only", help="Print the generated message and exit without prompting"),
+        typer.Option("--output-only", help="Print the generated message and exit without prompting"),  # noqa: E501
     ] = False,
 ) -> None:
     deps = _load_deps()
@@ -67,18 +67,20 @@ def commit_cmd(
     resolved_fmt = CommitFormat(fmt) if fmt else config.commit.format
     resolved_body = BodyLength(body_length) if body_length else config.commit.body_length
 
-    ai_config = resolve_ai_config(config.ai, model=config.commit.model, command=config.commit.command)
+    ai_config = resolve_ai_config(
+        config.ai, model=config.commit.model, command=config.commit.command
+    )
     backend = create_backend(ai_config)
-    console = create_console(config.theme)
 
     cmd = CommitCommand(
         ai_backend=backend,
         git_ops=deps.git_ops,
         ui=deps.ui,
-        console=console,
         gh_config=config.gh,
     )
-    cmd.run(style=resolved_style, fmt=resolved_fmt, body_length=resolved_body, output_only=output_only)
+    cmd.run(
+        style=resolved_style, fmt=resolved_fmt, body_length=resolved_body, output_only=output_only
+    )
 
 
 @app.command(name="pr", help="Generate a PR message from branch diff.")
@@ -93,7 +95,7 @@ def pr_cmd(
     ] = None,
     output_only: Annotated[
         bool,
-        typer.Option("--output-only", help="Print the generated message and exit without prompting"),
+        typer.Option("--output-only", help="Print the generated message and exit without prompting"),  # noqa: E501
     ] = False,
 ) -> None:
     deps = _load_deps()
@@ -103,13 +105,11 @@ def pr_cmd(
 
     ai_config = resolve_ai_config(config.ai, model=config.pr.model, command=config.pr.command)
     backend = create_backend(ai_config)
-    console = create_console(config.theme)
 
     cmd = PrCommand(
         ai_backend=backend,
         git_ops=deps.git_ops,
         ui=deps.ui,
-        console=console,
         gh_config=config.gh,
     )
     cmd.run(style=resolved_style, base_branch=base, output_only=output_only)

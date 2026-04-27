@@ -2,8 +2,6 @@
 
 import asyncio
 
-from rich.console import Console
-
 from gitscribe.actions import ActionChoice, ActionHandler
 from gitscribe.ai_backend import AiBackend
 from gitscribe.git_operations import GitOperations
@@ -20,13 +18,11 @@ class CommitCommand:
         ai_backend: AiBackend,
         git_ops: GitOperations,
         ui: UI,
-        console: Console,
         gh_config: GhConfig,
     ) -> None:
         self._ai = ai_backend
         self._git = git_ops
         self._ui = ui
-        self._console = console
         self._actions = ActionHandler(git_ops=git_ops, gh_config=gh_config)
 
     def run(
@@ -62,8 +58,7 @@ class CommitCommand:
 
     def _generate(self, prompt: str, silent: bool = False) -> str:
         if not silent:
-            self._ui.show_generating()
-            with self._console.status("[secondary]Thinking...[/secondary]"):
+            with self._ui.show_thinking():
                 return asyncio.run(self._ai.generate(prompt))
         return asyncio.run(self._ai.generate(prompt))
 

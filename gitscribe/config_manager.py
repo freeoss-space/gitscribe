@@ -1,6 +1,7 @@
 """Configuration manager for gitscribe."""
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,26 @@ from gitscribe.models import (
     Style,
     ThemeConfig,
 )
+
+
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    """Recursively merge override into base, returning a new dict."""
+    result = dict(base)
+    for key, value in override.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+def _current_platform() -> str:
+    """Return the normalized platform name: 'macos', 'linux', or 'windows'."""
+    if sys.platform == "darwin":
+        return "macos"
+    if sys.platform.startswith("win"):
+        return "windows"
+    return "linux"
 
 
 class ConfigManager:
@@ -49,6 +70,11 @@ class ConfigManager:
         self.config_path.write_text(json.dumps(data, indent=2))
 
     def _parse_config(self, data: dict[str, Any]) -> AppConfig:
+        platforms = data.get("platforms", {})
+        platform_overrides = platforms.get(_current_platform(), {})
+        if platform_overrides:
+            data = _deep_merge(data, platform_overrides)
+
         ai_data = data.get("ai", {})
         api_data = ai_data.get("api", {})
         cli_data = ai_data.get("cli", {})

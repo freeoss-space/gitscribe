@@ -19,7 +19,7 @@ type Service struct {
 	Config config.Config
 }
 
-func (s Service) GenerateCommit(noInterface bool) (Message, error) {
+func (s Service) GenerateCommit() (Message, error) {
 	diff, err := s.Git.Diff()
 	if err != nil { return Message{}, err }
 	if diff == "" { diff = "EMPTY_DIFF" }

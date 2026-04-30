@@ -55,32 +55,63 @@ func Default() Config {
 
 func Load(globalPath, repoRoot string) (Config, error) {
 	cfg := Default()
-	cfg = merge(cfg, read(globalPath))
-	cfg = merge(cfg, read(filepath.Join(repoRoot, ".gitscribe", "config.json")))
+
+	globalCfg, err := read(globalPath)
+	if err != nil {
+		return cfg, err
+	}
+	cfg, err = merge(cfg, globalCfg)
+	if err != nil {
+		return cfg, err
+	}
+
+	repoCfg, err := read(filepath.Join(repoRoot, ".gitscribe", "config.json"))
+	if err != nil {
+		return cfg, err
+	}
+	cfg, err = merge(cfg, repoCfg)
+	if err != nil {
+		return cfg, err
+	}
+
 	return cfg, nil
 }
 
-func read(path string) map[string]any {
+func read(path string) (map[string]any, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return map[string]any{}
+		if os.IsNotExist(err) {
+			return map[string]any{}, nil
+		}
+		return nil, err
 	}
 	m := map[string]any{}
-	if json.Unmarshal(b, &m) != nil {
-		return map[string]any{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
 	}
-	return m
+	return m, nil
 }
 
-func merge(base Config, overlay map[string]any) Config {
-	b, _ := json.Marshal(base)
+func merge(base Config, overlay map[string]any) (Config, error) {
+	b, err := json.Marshal(base)
+	if err != nil {
+		return base, err
+	}
 	m := map[string]any{}
-	_ = json.Unmarshal(b, &m)
+	if err := json.Unmarshal(b, &m); err != nil {
+		return base, err
+	}
 	deepMerge(m, overlay)
-	out, _ := json.Marshal(m)
-	_ = json.Unmarshal(out, &base)
-	return base
+	out, err := json.Marshal(m)
+	if err != nil {
+		return base, err
+	}
+	if err := json.Unmarshal(out, &base); err != nil {
+		return base, err
+	}
+	return base, nil
 }
+
 func deepMerge(dst, src map[string]any) {
 	for k, v := range src {
 		if sv, ok := v.(map[string]any); ok {

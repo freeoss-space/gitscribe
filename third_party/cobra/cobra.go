@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 )
 
 type Command struct {
-	Use  string
-	RunE func(*Command, []string) error
-	cmds []*Command
-	out  io.Writer
+	Use   string
+	RunE  func(*Command, []string) error
+	cmds  []*Command
+	out   io.Writer
 	flags FlagSet
 }
 
@@ -22,8 +24,12 @@ func (c *Command) Execute() error {
 	if len(args) > 0 {
 		for _, cmd := range c.cmds {
 			if cmd.commandName() == args[0] {
+				remaining, err := cmd.flags.Parse(args[1:])
+				if err != nil {
+					return err
+				}
 				if cmd.RunE != nil {
-					return cmd.RunE(cmd, args[1:])
+					return cmd.RunE(cmd, remaining)
 				}
 				return cmd.Execute()
 			}
@@ -63,5 +69,32 @@ func (f *FlagSet) BoolVar(p *bool, name string, value bool, usage string) {
 	f.bools[name] = p
 	_ = usage
 }
-func (c *Command) SetOut(w io.Writer)    { c.out = w }
-func (c *Command) Println(a ...any)      { fmt.Fprintln(c.OutOrStdout(), a...) }
+
+func (f *FlagSet) Parse(args []string) ([]string, error) {
+	var remaining []string
+	for _, arg := range args {
+		if !strings.HasPrefix(arg, "--") {
+			remaining = append(remaining, arg)
+			continue
+		}
+		name := arg[2:]
+		val := "true"
+		if idx := strings.IndexByte(name, '='); idx >= 0 {
+			val = name[idx+1:]
+			name = name[:idx]
+		}
+		if p, ok := f.bools[name]; ok {
+			b, err := strconv.ParseBool(val)
+			if err != nil {
+				return nil, fmt.Errorf("invalid bool value %q for --%s", val, name)
+			}
+			*p = b
+		} else {
+			remaining = append(remaining, arg)
+		}
+	}
+	return remaining, nil
+}
+
+func (c *Command) SetOut(w io.Writer) { c.out = w }
+func (c *Command) Println(a ...any)   { fmt.Fprintln(c.OutOrStdout(), a...) }

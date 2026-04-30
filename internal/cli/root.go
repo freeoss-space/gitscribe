@@ -26,6 +26,12 @@ func validateDeps(d *Deps) error {
 	if d == nil {
 		return fmt.Errorf("missing dependencies")
 	}
+	if d.Service.Git == nil {
+		return fmt.Errorf("missing Git provider")
+	}
+	if d.Service.LLM == nil {
+		return fmt.Errorf("missing LLM runner")
+	}
 	return nil
 }
 

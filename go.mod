@@ -1,6 +1,8 @@
 module gitscribe
 
-go 1.25
+go 1.24
+
+toolchain go1.24.7
 
 require (
 	github.com/charmbracelet/bubbletea v0.0.0
@@ -8,4 +10,5 @@ require (
 )
 
 replace github.com/charmbracelet/bubbletea => ./third_party/bubbletea
+
 replace github.com/spf13/cobra => ./third_party/cobra

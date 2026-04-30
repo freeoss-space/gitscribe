@@ -37,6 +37,9 @@ func (c *Command) executeWith(args []string) error {
 				return cmd.executeWith(remaining)
 			}
 		}
+		if len(c.cmds) > 0 {
+			return fmt.Errorf("unknown command %q", args[0])
+		}
 	}
 	if c.RunE != nil {
 		return c.RunE(c, args)

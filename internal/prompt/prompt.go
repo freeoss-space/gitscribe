@@ -12,7 +12,17 @@ func BuildCommit(cfg config.Config, diff string) string {
 	if cfg.Body.Mode != "none" {
 		body = fmt.Sprintf("%d to %d bullet points", cfg.Body.MinItems, cfg.Body.MaxItems)
 	}
-	return fmt.Sprintf("Generate a commit message using %s format.\nTone: %s\nEmoji: %v\nBody rules: %s\nAdditional instructions: %s\nGit diff:\n%s",
+	return fmt.Sprintf(`Generate a commit message from the git diff and return ONLY valid JSON.
+The response must be exactly one JSON object with this schema:
+{"title": string, "body": string, "breaking": boolean}
+Do not include markdown fences, explanations, or any text before or after the JSON.
+Use %s format.
+Tone: %s
+Emoji: %s
+Body rules: %s
+Additional instructions: %s
+Git diff:
+%s`,
 		cfg.Format.Type, cfg.Style.Tone, yn(cfg.Style.Emoji), body, cfg.Prompts.Commit, diff)
 }
 

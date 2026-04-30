@@ -1,6 +1,7 @@
 package temp
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -10,7 +11,7 @@ func TestPathUsesCommitSuffix(t *testing.T) {
 	if !strings.Contains(p, "_commit.tmp") {
 		t.Fatalf("unexpected path: %s", p)
 	}
-	base := p[strings.LastIndex(p, "/")+1:]
+	base := filepath.Base(p)
 	prefix := strings.TrimSuffix(base, "_commit.tmp")
 	if len(prefix) != 16 {
 		t.Fatalf("expected 16-char hex hash prefix, got %q", prefix)

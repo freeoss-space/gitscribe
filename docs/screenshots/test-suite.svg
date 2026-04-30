@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="586" viewBox="0 0 700 586">
+  <defs>
+    <style>
+      text { font-family: Cascadia Code, Fira Code, JetBrains Mono, Menlo, Consolas, monospace; font-size: 14px; }
+    </style>
+  </defs>
+  <!-- Window -->
+  <rect width="700" height="586" rx="8" fill="#1e1e2e"/>
+  <!-- Title bar -->
+  <rect width="700" height="40" rx="8" fill="#313244"/>
+  <rect y="32" width="700" height="8" fill="#313244"/>
+  <!-- Traffic lights -->
+  <circle cx="18" cy="20" r="6" fill="#f38ba8"/>
+  <circle cx="36" cy="20" r="6" fill="#f9e2af"/>
+  <circle cx="54" cy="20" r="6" fill="#a6e3a1"/>
+  <!-- Title -->
+  <text x="350" y="26" text-anchor="middle" fill="#bac2de">gitscribe — test suite (all passing)</text>
+  <text x="20" y="74" fill="#a6e3a1">$ go test ./... -v</text>
+  <text x="20" y="96" fill="#cdd6f4"> </text>
+  <text x="20" y="118" fill="#6c7086">?   gitscribe/cmd/gitscribe   [no test files]</text>
+  <text x="20" y="140" fill="#89b4fa">=== RUN   TestGenerateCommit</text>
+  <text x="20" y="162" fill="#a6e3a1">--- PASS: TestGenerateCommit (0.00s)</text>
+  <text x="20" y="184" fill="#a6e3a1">ok  gitscribe/internal/app   0.003s</text>
+  <text x="20" y="206" fill="#89b4fa">=== RUN   TestRootHasCommands</text>
+  <text x="20" y="228" fill="#a6e3a1">--- PASS: TestRootHasCommands (0.00s)</text>
+  <text x="20" y="250" fill="#a6e3a1">ok  gitscribe/internal/cli   0.004s</text>
+  <text x="20" y="272" fill="#89b4fa">=== RUN   TestLoadDeepMerge</text>
+  <text x="20" y="294" fill="#a6e3a1">--- PASS: TestLoadDeepMerge (0.00s)</text>
+  <text x="20" y="316" fill="#a6e3a1">ok  gitscribe/internal/config   0.005s</text>
+  <text x="20" y="338" fill="#89b4fa">=== RUN   TestBuildCommitPrompt</text>
+  <text x="20" y="360" fill="#a6e3a1">--- PASS: TestBuildCommitPrompt (0.00s)</text>
+  <text x="20" y="382" fill="#a6e3a1">ok  gitscribe/internal/prompt   0.005s</text>
+  <text x="20" y="404" fill="#89b4fa">=== RUN   TestPathUsesCommitSuffix</text>
+  <text x="20" y="426" fill="#a6e3a1">--- PASS: TestPathUsesCommitSuffix (0.00s)</text>
+  <text x="20" y="448" fill="#a6e3a1">ok  gitscribe/internal/temp   0.002s</text>
+  <text x="20" y="470" fill="#89b4fa">=== RUN   TestModelInit</text>
+  <text x="20" y="492" fill="#a6e3a1">--- PASS: TestModelInit (0.00s)</text>
+  <text x="20" y="514" fill="#a6e3a1">ok  gitscribe/internal/tui   0.002s</text>
+  <text x="20" y="536" fill="#cdd6f4"> </text>
+  <text x="20" y="558" fill="#a6e3a1">$ _</text>
+</svg>

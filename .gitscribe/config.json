@@ -1,0 +1,38 @@
+{
+  "llm": {
+    "command": "claude --model haiku -p",
+    "timeout_seconds": 30
+  },
+  "format": {
+    "type": "conventional",
+    "scopes": [
+      "feat",
+      "fix",
+      "chore",
+      "docs",
+      "refactor",
+      "test"
+    ],
+    "require_scope": false,
+    "template": ""
+  },
+  "style": {
+    "tone": "professional",
+    "verbosity": "medium",
+    "emoji": false
+  },
+  "body": {
+    "mode": "small",
+    "bullet_style": "dash",
+    "max_items": 5,
+    "min_items": 3
+  },
+  "prompts": {
+    "base": "",
+    "commit": "",
+    "pr": ""
+  },
+  "gh": {
+    "command": "gh pr create --title {title} --body {body}"
+  }
+}

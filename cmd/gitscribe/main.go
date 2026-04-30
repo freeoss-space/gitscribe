@@ -1,9 +1,9 @@
 package main
 
 import (
-	"gitscribe/internal/app"
-	"gitscribe/internal/cli"
-	"gitscribe/internal/config"
+	"github.com/freeoss-space/gitscribe/internal/app"
+	"github.com/freeoss-space/gitscribe/internal/cli"
+	"github.com/freeoss-space/gitscribe/internal/config"
 )
 
 type gitStub struct{}

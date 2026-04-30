@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gitscribe/internal/config"
+	"github.com/freeoss-space/gitscribe/internal/config"
 )
 
 func BuildCommit(cfg config.Config, diff string) string {

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/spf13/cobra"
-	"gitscribe/internal/app"
-	"gitscribe/internal/tui"
+	"github.com/freeoss-space/gitscribe/internal/app"
+	"github.com/freeoss-space/gitscribe/internal/tui"
 )
 
 type Deps struct{ Service app.Service }
@@ -54,8 +54,8 @@ func newCommitCmd(d *Deps) *cobra.Command {
 			return nil
 		}
 		model := tui.NewModel(msg.Title, msg.Body)
-		if v := model.View(); v != "" {
-			fmt.Fprintln(cmd.OutOrStdout(), v)
+		if v := model.View(); v.Content != "" {
+			fmt.Fprintln(cmd.OutOrStdout(), v.Content)
 		}
 		p := tea.NewProgram(model)
 		finalModel, err := p.Run()
@@ -63,8 +63,8 @@ func newCommitCmd(d *Deps) *cobra.Command {
 			return err
 		}
 		if finalModel != nil {
-			if v := finalModel.View(); v != "" {
-				fmt.Fprintln(cmd.OutOrStdout(), v)
+			if v := finalModel.View(); v.Content != "" {
+				fmt.Fprintln(cmd.OutOrStdout(), v.Content)
 			}
 		}
 		return nil

@@ -1,6 +1,6 @@
 package tui
 
-import tea "github.com/charmbracelet/bubbletea"
+import tea "charm.land/bubbletea/v2"
 
 type Model struct {
 	Title string
@@ -20,4 +20,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 	return m, nil
 }
-func (m Model) View() string { return "Editing commit message\nTitle: " + m.Title + "\n\n" + m.Body }
+func (m Model) View() tea.View {
+	return tea.NewView("Editing commit message\nTitle: " + m.Title + "\n\n" + m.Body)
+}

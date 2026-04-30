@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"gitscribe/internal/config"
-	"gitscribe/internal/prompt"
+	"github.com/freeoss-space/gitscribe/internal/config"
+	"github.com/freeoss-space/gitscribe/internal/prompt"
 )
 
 type Message struct {

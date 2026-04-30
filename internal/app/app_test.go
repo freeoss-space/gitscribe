@@ -3,7 +3,7 @@ package app
 import (
 	"testing"
 
-	"gitscribe/internal/config"
+	"github.com/freeoss-space/gitscribe/internal/config"
 )
 
 type fakeRunner struct{ out string }

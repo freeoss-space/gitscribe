@@ -3,7 +3,7 @@ package prompt
 import (
 	"strings"
 	"testing"
-	"gitscribe/internal/config"
+	"github.com/freeoss-space/gitscribe/internal/config"
 )
 
 func TestBuildCommitPrompt(t *testing.T) {

@@ -20,7 +20,10 @@ func (c *Command) AddCommand(cmds ...*Command) { c.cmds = append(c.cmds, cmds...
 func (c *Command) Commands() []*Command        { return c.cmds }
 
 func (c *Command) Execute() error {
-	args := os.Args[1:]
+	return c.executeWith(os.Args[1:])
+}
+
+func (c *Command) executeWith(args []string) error {
 	if len(args) > 0 {
 		for _, cmd := range c.cmds {
 			if cmd.commandName() == args[0] {
@@ -31,7 +34,7 @@ func (c *Command) Execute() error {
 				if cmd.RunE != nil {
 					return cmd.RunE(cmd, remaining)
 				}
-				return cmd.Execute()
+				return cmd.executeWith(remaining)
 			}
 		}
 	}

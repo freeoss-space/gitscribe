@@ -1,9 +1,9 @@
 package temp
 
 import (
-	"crypto/sha1"
-	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"hash/fnv"
 	"os"
 	"path/filepath"
 )
@@ -18,8 +18,9 @@ func draftsDir() string {
 }
 
 func DraftPath(repoPath, kind string) string {
-	h := sha1.Sum([]byte(repoPath))
-	return filepath.Join(draftsDir(), hex.EncodeToString(h[:])+"_"+kind+".tmp")
+	h := fnv.New64a()
+	h.Write([]byte(repoPath))
+	return filepath.Join(draftsDir(), fmt.Sprintf("%016x_%s.tmp", h.Sum64(), kind))
 }
 
 func Save(repoPath, kind string, d Draft) error {

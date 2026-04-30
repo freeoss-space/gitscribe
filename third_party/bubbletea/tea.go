@@ -17,12 +17,16 @@ func (p *Program) Run() (Model, error) {
 	if p.m == nil {
 		return nil, nil
 	}
-	if cmd := p.m.Init(); cmd != nil {
-		if msg := cmd(); msg != nil {
-			if m, _ := p.m.Update(msg); m != nil {
-				p.m = m
-			}
+	for cmd := p.m.Init(); cmd != nil; {
+		msg := cmd()
+		if msg == nil {
+			break
 		}
+		m, next := p.m.Update(msg)
+		if m != nil {
+			p.m = m
+		}
+		cmd = next
 	}
 	return p.m, nil
 }

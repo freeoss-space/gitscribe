@@ -46,13 +46,28 @@ func newCommitCmd(d *Deps) *cobra.Command {
 			return err
 		}
 		if noInterface {
-			fmt.Fprintln(cmd.OutOrStdout(), msg.Title)
-			fmt.Fprintln(cmd.OutOrStdout(), msg.Body)
+			output := msg.Title
+			if msg.Body != "" {
+				output += "\n\n" + msg.Body
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), output)
 			return nil
 		}
-		p := tea.NewProgram(tui.NewModel(msg.Title, msg.Body))
-		_, err = p.Run()
-		return err
+		model := tui.NewModel(msg.Title, msg.Body)
+		if v := model.View(); v != "" {
+			fmt.Fprintln(cmd.OutOrStdout(), v)
+		}
+		p := tea.NewProgram(model)
+		finalModel, err := p.Run()
+		if err != nil {
+			return err
+		}
+		if finalModel != nil {
+			if v := finalModel.View(); v != "" {
+				fmt.Fprintln(cmd.OutOrStdout(), v)
+			}
+		}
+		return nil
 	}}
 	cmd.Flags().BoolVar(&noInterface, "no-interface", false, "print only")
 	return cmd
